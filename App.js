@@ -16,12 +16,6 @@ const App = () => {
   const popupPosition = useSharedValue({x: 0, y: 0});
   const sharedValue = useSharedValue(0.5);
 
-  // const animatedSyles = useAnimatedStyle(() => {
-  //   return {
-  //     transform: [{translateX: offset.value.x}, {translateY: offset.value.y}]
-  //   }
-  // })
-
   const animatedPopupStyles = useAnimatedStyle(() => {
     return {
       transform: [

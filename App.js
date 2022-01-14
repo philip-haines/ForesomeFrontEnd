@@ -6,38 +6,48 @@ import users from './assets/data/users';
 import Animated, {
   useSharedValue, 
   useAnimatedStyle,
-  withTiming,
-  withSpring
+  useDerivedValue,
+  withSpring,
+  useAnimatedGestureHandler,
+  interpolate,
 } from 'react-native-reanimated';
+import { PanGestureHandler } from 'react-native-gesture-handler'
+import useWindowDimensions from 'react-native/Libraries/Utilities/useWindowDimensions';
 
 const App = () => {
-  const offset = useSharedValue({x: 0, y: 0});
-  const start = useSharedValue({x: 0, y: 0});
-  const popupPosition = useSharedValue({x: 0, y: 0});
-  const sharedValue = useSharedValue(0.5);
+  const {width: screenWidth} = useWindowDimensions();
 
-  // const animatedSyles = useAnimatedStyle(() => {
-  //   return {
-  //     transform: [{translateX: offset.value.x}, {translateY: offset.value.y}]
-  //   }
-  // })
-
-  const animatedPopupStyles = useAnimatedStyle(() => {
+  const cardPosition = useSharedValue(0.5);
+  const rotate = useDerivedValue(() => interpolate(cardPosition.value, [0, screenWidth], [0, 20]) + 'deg');
+  const animatedCardStyles = useAnimatedStyle(() => {
     return {
       transform: [
-        {translateX: sharedValue.value * 500 - 250}
+        { translateX: cardPosition.value },
+        { rotate: rotate.value }
       ],
-    };
+    }
+  });
+
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, context) => {
+      context.startX = cardPosition.value;
+    },
+    onActive: (event, context) => {
+      cardPosition.value = context.startX + event.translationX;
+      console.log(cardPosition.value)
+    },
+    onEnd: (_, context) => {
+      console.log('touch end');
+    }
   });
 
   return (
     <View style={styles.pageContainer}>
-      <Animated.View style={[styles.animatedCard, animatedPopupStyles]}>
-        <UserCard user={users[0]}/>
-      </Animated.View>
-      <Pressable onPress={() => (sharedValue.value = withSpring(Math.random()))} style={{position: 'absolute', top: 100}}>
-        <Text>Change Value</Text>
-      </Pressable>
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+        <Animated.View style={[styles.animatedCard, animatedCardStyles]}>
+          <UserCard user={users[3]}/>
+        </Animated.View>
+      </PanGestureHandler>
     </View>
   );
 };

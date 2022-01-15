@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
-import React from 'react';
-import { View, StyleSheet, Pressable, Text } from 'react-native';
+import React, {useState} from 'react';
+import { View, StyleSheet } from 'react-native';
 import UserCard from './src/components/UserCard';
 import users from './assets/data/users';
 import Animated, {
@@ -14,38 +14,60 @@ import Animated, {
 import { PanGestureHandler } from 'react-native-gesture-handler'
 import useWindowDimensions from 'react-native/Libraries/Utilities/useWindowDimensions';
 
-const App = () => {
-  const {width: screenWidth} = useWindowDimensions();
+const maximumRotation = -30;
 
-  const cardPosition = useSharedValue(0.5);
-  const rotate = useDerivedValue(() => interpolate(cardPosition.value, [0, screenWidth], [0, 20]) + 'deg');
-  const animatedCardStyles = useAnimatedStyle(() => {
+const App = () => {
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [nextCardIndex, setNextCardIndex] = useState(currentCardIndex + 1);
+
+  const currentUserProfile = users[currentCardIndex];
+  const nextUserProfile = users[nextCardIndex];
+
+  const {width: screenWidth} = useWindowDimensions();
+  const hiddenTranslateX = 2 * screenWidth;
+
+  const initialCurrentUserTranslateValue = 0.5;
+  const currentUserCardPosition = useSharedValue(initialCurrentUserTranslateValue);
+  const rotate = useDerivedValue(() => interpolate(currentUserCardPosition.value, [0, hiddenTranslateX], [0, maximumRotation]) + 'deg');
+  const currentUserAnimationStyles = useAnimatedStyle(() => {
     return {
       transform: [
-        { translateX: cardPosition.value },
+        { translateX: currentUserCardPosition.value },
         { rotate: rotate.value }
       ],
     }
   });
+  const nextUserCardScaleStart = 0.95;
+  const nextUserCardScale = useDerivedValue(() => interpolate(currentUserCardPosition.value, [-screenWidth, 0, screenWidth], [1, nextUserCardScaleStart, 1]));
+  const nextUserAnimationStyles = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { scale: nextUserCardScale.value }
+      ]
+    }
+  })
 
   const gestureHandler = useAnimatedGestureHandler({
     onStart: (_, context) => {
-      context.startX = cardPosition.value;
+      context.startX = currentUserCardPosition.value;
     },
     onActive: (event, context) => {
-      cardPosition.value = context.startX + event.translationX;
-      console.log(cardPosition.value)
+      currentUserCardPosition.value = context.startX + event.translationX;
     },
     onEnd: (_, context) => {
-      console.log('touch end');
+      currentUserCardPosition.value = withSpring(initialCurrentUserTranslateValue);
     }
   });
 
   return (
     <View style={styles.pageContainer}>
+      <Animated.View style={[styles.cardContainer, styles.nextCardContainer, nextUserAnimationStyles]}>
+        <UserCard user={nextUserProfile}/>
+      </Animated.View>
+
       <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View style={[styles.animatedCard, animatedCardStyles]}>
-          <UserCard user={users[3]}/>
+        <Animated.View style={[styles.cardContainer, currentUserAnimationStyles]}>
+          <UserCard user={currentUserProfile}/>
         </Animated.View>
       </PanGestureHandler>
     </View>
@@ -59,11 +81,14 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     flex: 1
   },
-  animatedCard: {
+  cardContainer: {
     width: '100%',
     justifyContent: 'center', 
     alignItems: 'center', 
     flex: 1,
+  },
+  nextCardContainer: {
+    ...StyleSheet.absoluteFillObject
   }
 });
 

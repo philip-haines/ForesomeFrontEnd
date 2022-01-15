@@ -37,10 +37,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    // height: undefined,
-    // aspectRatio: 2.75/4.5,
     height: '100%',
-    // ...StyleSheet.absoluteFillObject,
     borderRadius: 10,
     overflow: 'hidden',
     justifyContent: 'flex-end',

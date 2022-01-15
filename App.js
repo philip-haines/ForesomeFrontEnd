@@ -1,29 +1,13 @@
 import 'react-native-gesture-handler';
 import React from 'react';
 import { View, StyleSheet} from 'react-native';
-import UserCard from './src/components/UserCard';
-import users from './assets/data/users';
-import AnimatedStack from './src/components/AnimatedStack';
+import SwipeScreen from './src/screens/SwipeScreen';
+import MatchesScreen from './src/screens/MatchesScreen';
 
 const App = () => {
-
-  const onSwipeLeft = (user) => {
-    console.log('swipe left', {user})
-  }
-
-  const onSwipeRight = (user) => {
-    console.log('swipe right', {user})
-  }
-
-
   return (
     <View style={styles.pageContainer}>
-      <AnimatedStack 
-        data={users}
-        renderItem={({ item }) => <UserCard user={item} />}
-        onSwipeLeft={onSwipeLeft}
-        onSwipeRight={onSwipeRight}
-        />
+      <SwipeScreen />
     </View>
   );
 };

@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import UserCard from './src/components/UserCard';
 import users from './assets/data/users';
@@ -10,11 +10,13 @@ import Animated, {
   withSpring,
   useAnimatedGestureHandler,
   interpolate,
+  runOnJS
 } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler'
 import useWindowDimensions from 'react-native/Libraries/Utilities/useWindowDimensions';
 
 const maximumRotation = -30;
+const swipeVelocityMinimum = 800;
 
 const App = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -25,7 +27,7 @@ const App = () => {
 
   const {width: screenWidth} = useWindowDimensions();
   const hiddenTranslateX = 2 * screenWidth;
-  const narrowedScreenWidth = screenWidth - (screenWidth * 0.12);
+  const narrowedScreenWidth = screenWidth;
 
   const initialCurrentUserTranslateValue = 0.5;
   const currentUserCardPosition = useSharedValue(initialCurrentUserTranslateValue);
@@ -38,7 +40,7 @@ const App = () => {
       ],
     }
   });
-  
+
   const nextUserCardScaleStart = 0.95;
   const nextUserCardOpacityStart = 0.65;
   const nextUserCardScale = useDerivedValue(() => interpolate(currentUserCardPosition.value, [-narrowedScreenWidth, 0, narrowedScreenWidth], [1, nextUserCardScaleStart, 1]));
@@ -52,6 +54,8 @@ const App = () => {
     }
   })
 
+  // const checkForNextCard = () => !users[currentCardIndex] ? runOnJS(setCurrentCardIndex)(0) :  runOnJS(setCurrentCardIndex)(currentCardIndex + 1);
+
   const gestureHandler = useAnimatedGestureHandler({
     onStart: (_, context) => {
       context.startX = currentUserCardPosition.value;
@@ -59,22 +63,44 @@ const App = () => {
     onActive: (event, context) => {
       currentUserCardPosition.value = context.startX + event.translationX;
     },
-    onEnd: (_, context) => {
-      // currentUserCardPosition.value = withSpring(initialCurrentUserTranslateValue);
+    onEnd: (event, context) => {
+
+      if(Math.abs(event.velocityX) < swipeVelocityMinimum){
+        currentUserCardPosition.value = withSpring(initialCurrentUserTranslateValue);
+        return;
+      }
+
+      currentUserCardPosition.value = withSpring(
+        hiddenTranslateX * Math.sign(event.velocityX), 
+        {}, 
+        () => runOnJS(setCurrentCardIndex)(currentCardIndex + 1)
+      );
     }
   });
 
+  useEffect(() => {
+    currentUserCardPosition.value = 0;
+    runOnJS(setNextCardIndex)(currentCardIndex + 1)
+  }, [currentCardIndex, currentUserCardPosition])
+
+
   return (
     <View style={styles.pageContainer}>
-      <Animated.View style={[styles.cardContainer, styles.nextCardContainer, nextUserAnimationStyles]}>
-        <UserCard user={nextUserProfile}/>
-      </Animated.View>
+      {nextUserProfile && (
+        <View style={styles.nextCardContainer}>
+          <Animated.View style={[nextUserAnimationStyles, styles.cardContainer, styles.nextCardContainer]}>
+            <UserCard user={nextUserProfile}/>
+          </Animated.View>
+        </View>
+      )}
 
-      <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View style={[styles.cardContainer, currentUserAnimationStyles]}>
-          <UserCard user={currentUserProfile}/>
-        </Animated.View>
-      </PanGestureHandler>
+      {currentUserProfile && (
+        <PanGestureHandler onGestureEvent={gestureHandler}>
+          <Animated.View style={[styles.cardContainer, currentUserAnimationStyles]}>
+            <UserCard user={currentUserProfile}/>
+          </Animated.View>
+        </PanGestureHandler>
+      )}
     </View>
   );
 };
@@ -88,6 +114,7 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     width: '100%',
+    height: '100%',
     justifyContent: 'center', 
     alignItems: 'center', 
     flex: 1,

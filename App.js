@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import UserCard from './src/components/UserCard';
 import users from './assets/data/users';
 import Animated, {
@@ -14,6 +14,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler'
 import useWindowDimensions from 'react-native/Libraries/Utilities/useWindowDimensions';
+import Like from './assets/images/LIKE.png'
+import Nope from './assets/images/nope.png'
 
 const maximumRotation = -30;
 const swipeVelocityMinimum = 800;
@@ -27,7 +29,7 @@ const App = () => {
 
   const {width: screenWidth} = useWindowDimensions();
   const hiddenTranslateX = 2 * screenWidth;
-  const narrowedScreenWidth = screenWidth;
+  const reducedScreenSize = screenWidth - (screenWidth * 0.25)
 
   const initialCurrentUserTranslateValue = 0.5;
   const currentUserCardPosition = useSharedValue(initialCurrentUserTranslateValue);
@@ -43,8 +45,9 @@ const App = () => {
 
   const nextUserCardScaleStart = 0.95;
   const nextUserCardOpacityStart = 0.65;
-  const nextUserCardScale = useDerivedValue(() => interpolate(currentUserCardPosition.value, [-narrowedScreenWidth, 0, narrowedScreenWidth], [1, nextUserCardScaleStart, 1]));
-  const nextUserCardOpacity = useDerivedValue(() => interpolate(currentUserCardPosition.value, [-narrowedScreenWidth, 0, narrowedScreenWidth], [1, nextUserCardOpacityStart, 1]));
+  const nextUserCardScale = useDerivedValue(() => interpolate(currentUserCardPosition.value, [-hiddenTranslateX, 0, hiddenTranslateX], [1, nextUserCardScaleStart, 1]));
+  const nextUserCardOpacity = useDerivedValue(() => interpolate(currentUserCardPosition.value, [-hiddenTranslateX, 0, hiddenTranslateX], [1, nextUserCardOpacityStart, 1]));
+  
   const nextUserAnimationStyles = useAnimatedStyle(() => {
     return {
       transform: [
@@ -54,7 +57,19 @@ const App = () => {
     }
   })
 
-  // const checkForNextCard = () => !users[currentCardIndex] ? runOnJS(setCurrentCardIndex)(0) :  runOnJS(setCurrentCardIndex)(currentCardIndex + 1);
+  const likeSwatchOpacity = useDerivedValue(() => interpolate(currentUserCardPosition.value, [0, reducedScreenSize], [0, 1]));
+  const likeSwatchStyle = useAnimatedStyle(() => {
+    return {
+      opacity: likeSwatchOpacity.value
+    }
+  })
+
+  const nopeSwatchOpacity = useDerivedValue(() => interpolate(currentUserCardPosition.value, [0, -reducedScreenSize], [0, 1]));
+  const nopeSwatchStyle = useAnimatedStyle(() => {
+    return {
+      opacity: nopeSwatchOpacity.value
+    }
+  })
 
   const gestureHandler = useAnimatedGestureHandler({
     onStart: (_, context) => {
@@ -88,7 +103,7 @@ const App = () => {
     <View style={styles.pageContainer}>
       {nextUserProfile && (
         <View style={styles.nextCardContainer}>
-          <Animated.View style={[nextUserAnimationStyles, styles.cardContainer, styles.nextCardContainer]}>
+          <Animated.View style={[styles.cardContainer, nextUserAnimationStyles]}>
             <UserCard user={nextUserProfile}/>
           </Animated.View>
         </View>
@@ -97,6 +112,9 @@ const App = () => {
       {currentUserProfile && (
         <PanGestureHandler onGestureEvent={gestureHandler}>
           <Animated.View style={[styles.cardContainer, currentUserAnimationStyles]}>
+            {/* TODO: Move away from these images, turn into reuseable component */}
+            <Animated.Image source={Like} style={[styles.swipeText, {left: 10}, likeSwatchStyle]} resizeMode='contain'/>
+            <Animated.Image source={Nope} style={[styles.swipeText, {right: 10}, nopeSwatchStyle]} resizeMode='contain'/>
             <UserCard user={currentUserProfile}/>
           </Animated.View>
         </PanGestureHandler>
@@ -113,14 +131,23 @@ const styles = StyleSheet.create({
     flex: 1
   },
   cardContainer: {
-    width: '100%',
-    height: '100%',
+    width: '90%',
+    height: '70%',
     justifyContent: 'center', 
     alignItems: 'center', 
-    flex: 1,
   },
   nextCardContainer: {
-    ...StyleSheet.absoluteFillObject
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  swipeText: {
+    width: 150,
+    height: 150,
+    position: 'absolute',
+    top: 10,
+    zIndex: 1,
+    elevation: 11,
   }
 });
 

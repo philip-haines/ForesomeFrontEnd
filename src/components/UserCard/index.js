@@ -19,14 +19,9 @@ const UserCard = (props) => {
 }
 
 const styles = StyleSheet.create({
-  pageContainer: {
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    flex: 1
-  },
   card:{
-    width: '95%',
-    height: '70%',
+    width: '100%',
+    height: '100%',
     borderRadius: 10,
     shadowColor: "#000",
     shadowOffset: {
@@ -39,11 +34,11 @@ const styles = StyleSheet.create({
     elevation: 11,
   },
   image: {
-    // width: '100%',
+    width: '100%',
     // height: undefined,
     // aspectRatio: 2.75/4.5,
-    // height: '100%',
-    ...StyleSheet.absoluteFillObject,
+    height: '100%',
+    // ...StyleSheet.absoluteFillObject,
     borderRadius: 10,
     overflow: 'hidden',
     justifyContent: 'flex-end',

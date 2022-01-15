@@ -25,6 +25,7 @@ const App = () => {
 
   const {width: screenWidth} = useWindowDimensions();
   const hiddenTranslateX = 2 * screenWidth;
+  const narrowedScreenWidth = screenWidth - (screenWidth * 0.12);
 
   const initialCurrentUserTranslateValue = 0.5;
   const currentUserCardPosition = useSharedValue(initialCurrentUserTranslateValue);
@@ -37,13 +38,17 @@ const App = () => {
       ],
     }
   });
+  
   const nextUserCardScaleStart = 0.95;
-  const nextUserCardScale = useDerivedValue(() => interpolate(currentUserCardPosition.value, [-screenWidth, 0, screenWidth], [1, nextUserCardScaleStart, 1]));
+  const nextUserCardOpacityStart = 0.65;
+  const nextUserCardScale = useDerivedValue(() => interpolate(currentUserCardPosition.value, [-narrowedScreenWidth, 0, narrowedScreenWidth], [1, nextUserCardScaleStart, 1]));
+  const nextUserCardOpacity = useDerivedValue(() => interpolate(currentUserCardPosition.value, [-narrowedScreenWidth, 0, narrowedScreenWidth], [1, nextUserCardOpacityStart, 1]));
   const nextUserAnimationStyles = useAnimatedStyle(() => {
     return {
       transform: [
         { scale: nextUserCardScale.value }
-      ]
+      ],
+      opacity: nextUserCardOpacity.value
     }
   })
 
@@ -55,7 +60,7 @@ const App = () => {
       currentUserCardPosition.value = context.startX + event.translationX;
     },
     onEnd: (_, context) => {
-      currentUserCardPosition.value = withSpring(initialCurrentUserTranslateValue);
+      // currentUserCardPosition.value = withSpring(initialCurrentUserTranslateValue);
     }
   });
 

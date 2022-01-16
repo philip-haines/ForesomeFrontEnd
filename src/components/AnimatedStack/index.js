@@ -15,6 +15,7 @@ import useWindowDimensions from 'react-native/Libraries/Utilities/useWindowDimen
 import Like from '../../../assets/images/LIKE.png';
 import Nope from '../../../assets/images/nope.png';
 
+
 const maximumRotation = -30;
 const swipeVelocityMinimum = 800;
 
@@ -133,6 +134,8 @@ const AnimatedStack = (props) => {
           </Animated.View>
         </PanGestureHandler>
       )}
+
+      
     </View>
   );
 };
@@ -143,11 +146,11 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'center', 
     alignItems: 'center', 
-    flex: 1
+    height: '90%',
   },
   cardContainer: {
-    width: '90%',
-    height: '70%',
+    width: '96%',
+    height: '100%',
     justifyContent: 'center', 
     alignItems: 'center', 
   },
@@ -163,6 +166,12 @@ const styles = StyleSheet.create({
     top: 10,
     zIndex: 1,
     elevation: 11,
+  },
+
+  navigation:{
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
   }
 });
 

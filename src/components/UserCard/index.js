@@ -8,11 +8,12 @@ const UserCard = (props) => {
       <ImageBackground 
       source={{uri: image}}
       style={styles.image}
-      >
-        <View style={styles.infoContainer}>
-          <Text style={styles.name}>{ name }</Text>
-          <Text style={styles.bio}>{ bio }</Text>
-        </View>
+      resizeMode='cover'
+      > 
+      <View style={styles.infoContainer}>
+        <Text style={styles.name}>{ name }</Text>
+        <Text style={styles.bio}>{ bio }</Text>
+      </View>
       </ImageBackground>
     </View>
   )
@@ -47,7 +48,14 @@ const styles = StyleSheet.create({
     width: '90%',
     justifyContent: 'center',
     padding: 10,
+    paddingBottom: '12%',
     alignItems: 'flex-start',
+  },
+  linearGradient: {
+    flex: 1,
+    paddingLeft: 15,
+    paddingRight: 15,
+    borderRadius: 5
   },
   name:{
     fontSize: 30,

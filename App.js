@@ -1,125 +1,25 @@
 import 'react-native-gesture-handler';
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Image } from 'react-native';
-import UserCard from './src/components/UserCard';
-import users from './assets/data/users';
-import Animated, {
-  useSharedValue, 
-  useAnimatedStyle,
-  useDerivedValue,
-  withSpring,
-  useAnimatedGestureHandler,
-  interpolate,
-  runOnJS
-} from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler'
-import useWindowDimensions from 'react-native/Libraries/Utilities/useWindowDimensions';
-import Like from './assets/images/LIKE.png'
-import Nope from './assets/images/nope.png'
-
-const maximumRotation = -30;
-const swipeVelocityMinimum = 800;
+import React from 'react';
+import { StyleSheet, SafeAreaView, View} from 'react-native';
+import SwipeScreen from './src/screens/SwipeScreen';
+import MatchesScreen from './src/screens/MatchesScreen';
+import Fontisto from 'react-native-vector-icons/Fontisto';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 const App = () => {
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [nextCardIndex, setNextCardIndex] = useState(currentCardIndex + 1);
-
-  const currentUserProfile = users[currentCardIndex];
-  const nextUserProfile = users[nextCardIndex];
-
-  const {width: screenWidth} = useWindowDimensions();
-  const hiddenTranslateX = 2 * screenWidth;
-  const reducedScreenSize = screenWidth - (screenWidth * 0.25)
-
-  const initialCurrentUserTranslateValue = 0.5;
-  const currentUserCardPosition = useSharedValue(initialCurrentUserTranslateValue);
-  const rotate = useDerivedValue(() => interpolate(currentUserCardPosition.value, [0, hiddenTranslateX], [0, maximumRotation]) + 'deg');
-  const currentUserAnimationStyles = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { translateX: currentUserCardPosition.value },
-        { rotate: rotate.value }
-      ],
-    }
-  });
-
-  const nextUserCardScaleStart = 0.95;
-  const nextUserCardOpacityStart = 0.65;
-  const nextUserCardScale = useDerivedValue(() => interpolate(currentUserCardPosition.value, [-hiddenTranslateX, 0, hiddenTranslateX], [1, nextUserCardScaleStart, 1]));
-  const nextUserCardOpacity = useDerivedValue(() => interpolate(currentUserCardPosition.value, [-hiddenTranslateX, 0, hiddenTranslateX], [1, nextUserCardOpacityStart, 1]));
-  
-  const nextUserAnimationStyles = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { scale: nextUserCardScale.value }
-      ],
-      opacity: nextUserCardOpacity.value
-    }
-  })
-
-  const likeSwatchOpacity = useDerivedValue(() => interpolate(currentUserCardPosition.value, [0, reducedScreenSize], [0, 1]));
-  const likeSwatchStyle = useAnimatedStyle(() => {
-    return {
-      opacity: likeSwatchOpacity.value
-    }
-  })
-
-  const nopeSwatchOpacity = useDerivedValue(() => interpolate(currentUserCardPosition.value, [0, -reducedScreenSize], [0, 1]));
-  const nopeSwatchStyle = useAnimatedStyle(() => {
-    return {
-      opacity: nopeSwatchOpacity.value
-    }
-  })
-
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: (_, context) => {
-      context.startX = currentUserCardPosition.value;
-    },
-    onActive: (event, context) => {
-      currentUserCardPosition.value = context.startX + event.translationX;
-    },
-    onEnd: (event, context) => {
-
-      if(Math.abs(event.velocityX) < swipeVelocityMinimum){
-        currentUserCardPosition.value = withSpring(initialCurrentUserTranslateValue);
-        return;
-      }
-
-      currentUserCardPosition.value = withSpring(
-        hiddenTranslateX * Math.sign(event.velocityX), 
-        {}, 
-        () => runOnJS(setCurrentCardIndex)(currentCardIndex + 1)
-      );
-    }
-  });
-
-  useEffect(() => {
-    currentUserCardPosition.value = 0;
-    runOnJS(setNextCardIndex)(currentCardIndex + 1)
-  }, [currentCardIndex, currentUserCardPosition])
-
-
+  const color = '#D8DEE9'
   return (
-    <View style={styles.pageContainer}>
-      {nextUserProfile && (
-        <View style={styles.nextCardContainer}>
-          <Animated.View style={[styles.cardContainer, nextUserAnimationStyles]}>
-            <UserCard user={nextUserProfile}/>
-          </Animated.View>
-        </View>
-      )}
-
-      {currentUserProfile && (
-        <PanGestureHandler onGestureEvent={gestureHandler}>
-          <Animated.View style={[styles.cardContainer, currentUserAnimationStyles]}>
-            {/* TODO: Move away from these images, turn into reuseable component */}
-            <Animated.Image source={Like} style={[styles.swipeText, {left: 10}, likeSwatchStyle]} resizeMode='contain'/>
-            <Animated.Image source={Nope} style={[styles.swipeText, {right: 10}, nopeSwatchStyle]} resizeMode='contain'/>
-            <UserCard user={currentUserProfile}/>
-          </Animated.View>
-        </PanGestureHandler>
-      )}
-    </View>
+    <SafeAreaView style={styles.pageContainer}>
+      <SwipeScreen />
+      <View style={styles.navigation}>
+        <Fontisto name="tinder" size={30} color={color} />
+        <MaterialCommunityIcons name="star-four-points" size={30} color={color} />
+        <Ionicons name="ios-chatbubbles" size={30} color={color} />
+        <FontAwesome name="user" size={30} color={color} />
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -130,24 +30,10 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     flex: 1
   },
-  cardContainer: {
-    width: '90%',
-    height: '70%',
-    justifyContent: 'center', 
-    alignItems: 'center', 
-  },
-  nextCardContainer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  swipeText: {
-    width: 150,
-    height: 150,
-    position: 'absolute',
-    top: 10,
-    zIndex: 1,
-    elevation: 11,
+  navigation:{
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-around'
   }
 });
 
